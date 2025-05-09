@@ -13,23 +13,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Download LiteManager.dmg
+      - name: Download LiteManager.zip
         run: |
-          curl -L -A "Mozilla/5.0" -o LiteManager.dmg https://litemanager.com/download/LiteManager.dmg
-          file LiteManager.dmg
-          if [[ $(file LiteManager.dmg) != *"Apple Disk Image"* ]]; then
-            echo "Download failed or not a valid DMG. Aborting."
+          curl -L -o LiteManager.zip https://litemanager.com/soft/LiteManager_OSX.zip
+          file LiteManager.zip
+          if [[ $(file LiteManager.zip) != *"Zip archive data"* ]]; then
+            echo "Download failed or not a valid ZIP. Aborting."
             exit 1
           fi
 
-      - name: Mount DMG
+      - name: Unzip LiteManager.zip
         run: |
-          hdiutil attach LiteManager.dmg
+          unzip LiteManager.zip -d LiteManager
+          ls -l LiteManager
 
       - name: Install LiteManager
         run: |
-          sudo cp -R /Volumes/LiteManager*/LiteManager.app /Applications/
-          hdiutil detach /Volumes/LiteManager*
+          sudo cp -R LiteManager/LiteManager.app /Applications/
 
       - name: Launch LiteManager Server
         run: |
