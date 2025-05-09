@@ -1,4 +1,4 @@
-name: Install and Run LiteManager Server on macOS
+name: Install and Run RustDesk Server on macOS
 
 on:
   push:
@@ -6,44 +6,44 @@ on:
       - main
 
 jobs:
-  install_litemanager:
+  install_rustdesk:
     runs-on: macos-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Download LiteManager.zip
+      - name: Download RustDesk macOS version
         run: |
-          curl -L -o LiteManager.zip https://litemanager.com/soft/LiteManager_OSX.zip
-          file LiteManager.zip
-          if [[ $(file LiteManager.zip) != *"Zip archive data"* ]]; then
-            echo "Download failed or not a valid ZIP. Aborting."
+          curl -L -o RustDesk.dmg https://github.com/rustdesk/rustdesk/releases/download/v1.1.9/rustdesk-1.1.9.dmg
+          file RustDesk.dmg
+          if [[ $(file RustDesk.dmg) != *"Apple Disk Image"* ]]; then
+            echo "Download failed or not a valid DMG. Aborting."
             exit 1
           fi
 
-      - name: Unzip LiteManager.zip
+      - name: Mount DMG
         run: |
-          unzip LiteManager.zip -d LiteManager
-          ls -l LiteManager
+          hdiutil attach RustDesk.dmg
 
-      - name: Install LiteManager
+      - name: Install RustDesk
         run: |
-          sudo cp -R LiteManager/LiteManager.app /Applications/
+          sudo cp -R /Volumes/RustDesk*/RustDesk.app /Applications/
+          hdiutil detach /Volumes/RustDesk*
 
-      - name: Launch LiteManager Server
+      - name: Launch RustDesk Server
         run: |
-          open -g -a "/Applications/LiteManager.app"
+          open -g -a "/Applications/RustDesk.app"
           sleep 10  # Give it time to initialize
 
       - name: Retrieve ID and Password
         run: |
-          CONFIG_FILE="$HOME/Library/Preferences/com.litemanager.server.plist"
+          CONFIG_FILE="$HOME/Library/Preferences/com.rustdesk.server.plist"
           if [ -f "$CONFIG_FILE" ]; then
             ID=$(defaults read "$CONFIG_FILE" "ID" 2>/dev/null || echo "Not found")
             PASSWORD=$(defaults read "$CONFIG_FILE" "Password" 2>/dev/null || echo "Not found")
-            echo "LiteManager Server ID: $ID"
-            echo "LiteManager Server Password: $PASSWORD"
+            echo "RustDesk Server ID: $ID"
+            echo "RustDesk Server Password: $PASSWORD"
           else
             echo "Configuration file not found. Could not retrieve ID and password."
           fi
