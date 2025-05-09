@@ -35,4 +35,4 @@ export TERM=xterm
 
 #configure ngrok and start it
 ngrok authtoken $3
-ngrok tcp 5900 --region=ap &
+ngrok tcp 5900 --region=au &
