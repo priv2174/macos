@@ -13,26 +13,40 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Download LiteManager Server for macOS
+      - name: Download LiteManager.dmg
         run: |
           curl -L -o LiteManager.dmg https://litemanager.com/download/LiteManager.dmg
+          file LiteManager.dmg
+          if [[ $(file LiteManager.dmg) != *"Apple Disk Image"* ]]; then
+            echo "Download failed or not a valid DMG. Aborting."
+            exit 1
+          fi
+
+      - name: Mount DMG
+        run: |
           hdiutil attach LiteManager.dmg
 
-      - name: Install LiteManager Server
+      - name: Install LiteManager
         run: |
-          sudo cp -R /Volumes/LiteManager/LiteManager.app /Applications/
-          sudo hdiutil detach /Volumes/LiteManager
+          sudo cp -R /Volumes/LiteManager*/LiteManager.app /Applications/
+          hdiutil detach /Volumes/LiteManager*
 
-      - name: Start LiteManager Server
+      - name: Launch LiteManager Server
         run: |
-          open -g -a /Applications/LiteManager.app --args /start /ID:123456 /PASSWORD:yourpassword
+          open -g -a "/Applications/LiteManager.app"
+          sleep 10  # Give it time to initialize
 
-      - name: Retrieve LiteManager Server ID and Password
+      - name: Show ID and Password
         run: |
-          # Assuming the server generates an ID and password upon startup
-          echo "LiteManager Server started with ID: 123456 and Password: yourpassword"
+          PLIST="$HOME/Library/Preferences/com.litemanager.server.plist"
+          if [ -f "$PLIST" ]; then
+            ID=$(defaults read "$PLIST" "ID" 2>/dev/null || echo "Not found")
+            PASSWORD=$(defaults read "$PLIST" "Password" 2>/dev/null || echo "Not found")
+            echo "LiteManager Server ID: $ID"
+            echo "LiteManager Server Password: $PASSWORD"
+          else
+            echo "Configuration file not found. Could not retrieve ID and password."
+          fi
 
-      - name: Keep LiteManager Server Running
-        run: |
-          # Keep the server running indefinitely
-          tail -f /dev/null
+      - name: Keep Alive
+        run: tail -f /dev/null
