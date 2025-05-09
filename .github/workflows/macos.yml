@@ -1,4 +1,4 @@
-name: Install and Run RustDesk Server on macOS
+name: Install and Run AnyDesk Server on macOS
 
 on:
   push:
@@ -6,65 +6,64 @@ on:
       - main
 
 jobs:
-  install_rustdesk:
+  install_anydesk:
     runs-on: macos-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Download RustDesk macOS version
+      - name: Install Homebrew
         run: |
-          # Use curl with a user-agent to mimic a browser and handle redirects
-          curl -L -A "Mozilla/5.0" -D headers.txt -o RustDesk.dmg https://github.com/rustdesk/rustdesk/releases/download/1.3.9/rustdesk-1.3.9-x86_64.dmg || { echo 'Curl failed!'; exit 1; }
-
-          # Output the response headers to check content type
-          echo "Response Headers:"
-          cat headers.txt
-
-          # Check if the file is a valid DMG
-          file RustDesk.dmg
-          if [[ $(file RustDesk.dmg) != *"Apple Disk Image"* ]]; then
-            echo "Download failed or not a valid DMG. Aborting."
-            exit 1
+          # Install Homebrew if it's not already installed
+          if ! command -v brew &> /dev/null; then
+            echo "Homebrew not found, installing..."
+            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          else
+            echo "Homebrew already installed"
           fi
 
-      - name: Mount DMG
+      - name: Install AnyDesk via Homebrew
         run: |
-          hdiutil attach RustDesk.dmg || { echo 'Failed to mount DMG!'; exit 1; }
+          # Install AnyDesk using Homebrew
+          brew install --cask anydesk || { echo 'AnyDesk installation failed!'; exit 1; }
 
-      - name: Install RustDesk
+      - name: Launch AnyDesk Server
         run: |
-          sudo cp -R /Volumes/RustDesk*/RustDesk.app /Applications/ || { echo 'Failed to install RustDesk!'; exit 1; }
-          hdiutil detach /Volumes/RustDesk* || { echo 'Failed to unmount DMG!'; exit 1; }
-
-      - name: Launch RustDesk Server
-        run: |
-          open -g -a "/Applications/RustDesk.app" || { echo 'Failed to open RustDesk!'; exit 1; }
+          # Launch AnyDesk in the background
+          open -g -a "/Applications/AnyDesk.app" || { echo 'Failed to open AnyDesk!'; exit 1; }
           sleep 30  # Give it time to initialize
 
-      - name: Search for ID and Password in Logs or Files
+      - name: Search for AnyDesk ID and Password
         run: |
-          echo "Searching for RustDesk ID and Password..."
-          
-          # Search common paths for the ID and Password
+          echo "Searching for AnyDesk ID and Password..."
+
           CONFIG_PATHS=(
-            "$HOME/Library/Preferences/com.rustdesk.server.plist"
-            "/Library/Preferences/com.rustdesk.server.plist"
-            "$HOME/.rustdesk"
-            "/var/log/rustdesk.log"
+            "$HOME/Library/Application Support/AnyDesk"
+            "/Library/Application Support/AnyDesk"
           )
 
           FOUND=0
           for path in "${CONFIG_PATHS[@]}"; do
-            if [ -f "$path" ]; then
+            if [ -d "$path" ]; then
               echo "Searching in: $path"
-              ID=$(grep -i "ID" "$path" 2>/dev/null || echo "Not found")
-              PASSWORD=$(grep -i "Password" "$path" 2>/dev/null || echo "Not found")
-              echo "Found ID and Password:"
-              echo "ID: $ID"
-              echo "Password: $PASSWORD"
-              FOUND=1
+              ID_FILE="$path/id.txt"
+              if [ -f "$ID_FILE" ]; then
+                ID=$(cat "$ID_FILE")
+                echo "Found AnyDesk ID: $ID"
+                FOUND=1
+              else
+                echo "ID file not found."
+              fi
               break
             fi
           done
+
+          if [ $FOUND -eq 0 ]; then
+            echo "Could not find AnyDesk ID."
+          fi
+
+      - name: Keep Alive
+        run: |
+          # Keep the job running
+          tail -f /dev/null
