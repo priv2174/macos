@@ -15,21 +15,7 @@ jobs:
 
       - name: Download RustDesk macOS version
         run: |
-          curl -L -o RustDesk.dmg https://github.com/rustdesk/rustdesk/releases/download/v1.1.9/rustdesk-1.1.9.dmg
-          file RustDesk.dmg
-          if [[ $(file RustDesk.dmg) != *"Apple Disk Image"* ]]; then
-            echo "Download failed or not a valid DMG. Aborting."
-            exit 1
-          fi
-
-      - name: Mount DMG
-        run: |
-          hdiutil attach RustDesk.dmg
-
-      - name: Install RustDesk
-        run: |
-          sudo cp -R /Volumes/RustDesk*/RustDesk.app /Applications/
-          hdiutil detach /Volumes/RustDesk*
+          brew install rustdesk
 
       - name: Launch RustDesk Server
         run: |
