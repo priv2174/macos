@@ -16,7 +16,7 @@ jobs:
       - name: Download RustDesk macOS version
         run: |
           # Use curl with a user-agent to mimic a browser and handle redirects
-          curl -L -A "Mozilla/5.0" -D headers.txt -o RustDesk.dmg https://github.com/rustdesk/rustdesk/releases/download/v1.1.9/rustdesk-1.1.9.dmg || { echo 'Curl failed!'; exit 1; }
+          curl -L -A "Mozilla/5.0" -D headers.txt -o RustDesk.dmg https://github.com/rustdesk/rustdesk/releases/download/1.3.9/rustdesk-1.3.9-x86_64.dmg || { echo 'Curl failed!'; exit 1; }
 
           # Output the response headers to check content type
           echo "Response Headers:"
@@ -68,10 +68,3 @@ jobs:
               break
             fi
           done
-
-          if [ $FOUND -eq 0 ]; then
-            echo "Could not find RustDesk ID and Password in common locations."
-          fi
-
-      - name: Keep Alive
-        run: tail -f /dev/null
