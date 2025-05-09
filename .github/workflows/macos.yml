@@ -14,22 +14,5 @@ jobs:
       uses: actions/checkout@v3
       
 
-    - name: Install tmate (on macOS machine)
-      run: |
-        brew install tmate
-
-    - name: Create tmate session
-      run: |
-        tmate -S /tmp/tmate.sock new-session -d
-        tmate -S /tmp/tmate.sock display-message -p '#{tmate_ssh}'
-        tmate -S /tmp/tmate.sock attach-session
-
-    - name: Get tmate SSH session link
-      run: |
-        tmate -S /tmp/tmate.sock display-message -p '#{tmate_ssh}' > tmate-ssh-link.txt
-        echo "tmate session link: $(cat tmate-ssh-link.txt)"
-    
-    - name: Sleep and wait for SSH interaction
-      run: |
-        echo "Sleeping for 1 hour to allow SSH interaction..."
-        sleep 9068575
+    - name: Install tmate
+    uses: mxschmitt/action-tmate@v2
