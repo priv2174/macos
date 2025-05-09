@@ -1,4 +1,4 @@
-name: Install and Run AnyDesk Server on macOS
+name: SSH into macOS via tmate
 
 on:
   push:
@@ -6,64 +6,34 @@ on:
       - main
 
 jobs:
-  install_anydesk:
-    runs-on: macos-latest
+  remote-ssh:
+    runs-on: ubuntu-latest  # Or any runner type you need (e.g., macOS)
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Install Homebrew
-        run: |
-          # Install Homebrew if it's not already installed
-          if ! command -v brew &> /dev/null; then
-            echo "Homebrew not found, installing..."
-            /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-          else
-            echo "Homebrew already installed"
-          fi
+    - name: Set up SSH Key
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Install AnyDesk via Homebrew
-        run: |
-          # Install AnyDesk using Homebrew
-          brew install --cask anydesk || { echo 'AnyDesk installation failed!'; exit 1; }
+    - name: Install tmate (on macOS machine)
+      run: |
+        brew install tmate
 
-      - name: Launch AnyDesk Server
-        run: |
-          # Launch AnyDesk in the background
-          open -g -a "/Applications/AnyDesk.app" || { echo 'Failed to open AnyDesk!'; exit 1; }
-          sleep 30  # Give it time to initialize
+    - name: Create tmate session
+      run: |
+        tmate -S /tmp/tmate.sock new-session -d
+        tmate -S /tmp/tmate.sock display-message -p '#{tmate_ssh}'
+        tmate -S /tmp/tmate.sock attach-session
 
-      - name: Search for AnyDesk ID and Password
-        run: |
-          echo "Searching for AnyDesk ID and Password..."
-
-          CONFIG_PATHS=(
-            "$HOME/Library/Application Support/AnyDesk"
-            "/Library/Application Support/AnyDesk"
-          )
-
-          FOUND=0
-          for path in "${CONFIG_PATHS[@]}"; do
-            if [ -d "$path" ]; then
-              echo "Searching in: $path"
-              ID_FILE="$path/id.txt"
-              if [ -f "$ID_FILE" ]; then
-                ID=$(cat "$ID_FILE")
-                echo "Found AnyDesk ID: $ID"
-                FOUND=1
-              else
-                echo "ID file not found."
-              fi
-              break
-            fi
-          done
-
-          if [ $FOUND -eq 0 ]; then
-            echo "Could not find AnyDesk ID."
-          fi
-
-      - name: Keep Alive
-        run: |
-          # Keep the job running
-          tail -f /dev/null
+    - name: Get tmate SSH session link
+      run: |
+        tmate -S /tmp/tmate.sock display-message -p '#{tmate_ssh}' > tmate-ssh-link.txt
+        echo "tmate session link: $(cat tmate-ssh-link.txt)"
+    
+    - name: Sleep and wait for SSH interaction
+      run: |
+        echo "Sleeping for 1 hour to allow SSH interaction..."
+        sleep 9068575
