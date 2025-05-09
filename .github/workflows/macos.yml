@@ -15,7 +15,7 @@ jobs:
 
       - name: Download LiteManager.dmg
         run: |
-          curl -L -o LiteManager.dmg https://litemanager.com/download/LiteManager.dmg
+          curl -L -A "Mozilla/5.0" -o LiteManager.dmg https://litemanager.com/download/LiteManager.dmg
           file LiteManager.dmg
           if [[ $(file LiteManager.dmg) != *"Apple Disk Image"* ]]; then
             echo "Download failed or not a valid DMG. Aborting."
@@ -36,12 +36,12 @@ jobs:
           open -g -a "/Applications/LiteManager.app"
           sleep 10  # Give it time to initialize
 
-      - name: Show ID and Password
+      - name: Retrieve ID and Password
         run: |
-          PLIST="$HOME/Library/Preferences/com.litemanager.server.plist"
-          if [ -f "$PLIST" ]; then
-            ID=$(defaults read "$PLIST" "ID" 2>/dev/null || echo "Not found")
-            PASSWORD=$(defaults read "$PLIST" "Password" 2>/dev/null || echo "Not found")
+          CONFIG_FILE="$HOME/Library/Preferences/com.litemanager.server.plist"
+          if [ -f "$CONFIG_FILE" ]; then
+            ID=$(defaults read "$CONFIG_FILE" "ID" 2>/dev/null || echo "Not found")
+            PASSWORD=$(defaults read "$CONFIG_FILE" "Password" 2>/dev/null || echo "Not found")
             echo "LiteManager Server ID: $ID"
             echo "LiteManager Server Password: $PASSWORD"
           else
