@@ -7,7 +7,7 @@ on:
 
 jobs:
   remote-ssh:
-    runs-on: ubuntu-latest  # Or any runner type you need (e.g., macOS)
+    runs-on: macos:latest  # Or any runner type you need (e.g., macOS)
 
     steps:
     - name: Checkout repository
