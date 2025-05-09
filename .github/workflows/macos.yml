@@ -1,21 +1,38 @@
-name: RDP Windows 2022 - LiteManager (arifkembiri)
+name: Install and Run LiteManager Server on macOS
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
 
 jobs:
-  build:
-    name: Start Building...
-    runs-on: windows-latest
-    timeout-minutes: 9999
-    
-    steps:
-      - name: Downloading & Installing Essentials
-        run: |
-          Invoke-WebRequest -Uri "https://github.com/arifkembiri/Windows10-LiteManager/raw/refs/heads/main/Download.bat" -OutFile "Downloads.bat"
-          cmd /c Downloads.bat
-      - name: Connect to LiteManager
-        run: cmd /c show.bat
+  install_litemanager:
+    runs-on: macos-latest
 
-      - name: Time Counter
-        run: cmd /c loop.bat
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download LiteManager Server for macOS
+        run: |
+          curl -L -o LiteManager.dmg https://litemanager.com/download/LiteManager.dmg
+          hdiutil attach LiteManager.dmg
+
+      - name: Install LiteManager Server
+        run: |
+          sudo cp -R /Volumes/LiteManager/LiteManager.app /Applications/
+          sudo hdiutil detach /Volumes/LiteManager
+
+      - name: Start LiteManager Server
+        run: |
+          open -g -a /Applications/LiteManager.app --args /start /ID:123456 /PASSWORD:yourpassword
+
+      - name: Retrieve LiteManager Server ID and Password
+        run: |
+          # Assuming the server generates an ID and password upon startup
+          echo "LiteManager Server started with ID: 123456 and Password: yourpassword"
+
+      - name: Keep LiteManager Server Running
+        run: |
+          # Keep the server running indefinitely
+          tail -f /dev/null
