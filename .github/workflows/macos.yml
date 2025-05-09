@@ -16,9 +16,13 @@ jobs:
       - name: Download RustDesk macOS version
         run: |
           # Use curl with a user-agent to mimic a browser and handle redirects
-          curl -L -A "Mozilla/5.0" -o RustDesk.dmg https://github.com/rustdesk/rustdesk/releases/download/1.3.9/rustdesk-1.3.9-x86_64.dmg
+          curl -L -A "Mozilla/5.0" -D headers.txt -o RustDesk.dmg https://github.com/rustdesk/rustdesk/releases/download/v1.1.9/rustdesk-1.1.9.dmg || { echo 'Curl failed!'; exit 1; }
 
-          # Check if the file is really a DMG or a zip file
+          # Output the response headers to check content type
+          echo "Response Headers:"
+          cat headers.txt
+
+          # Check if the file is a valid DMG
           file RustDesk.dmg
           if [[ $(file RustDesk.dmg) != *"Apple Disk Image"* ]]; then
             echo "Download failed or not a valid DMG. Aborting."
